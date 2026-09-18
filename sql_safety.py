@@ -2,9 +2,9 @@ import sqlglot
 from sqlglot import exp
 
 
-def validate_sql(sql):
+def validate_sql(sql, table_name="uploaded_data", dialect="duckdb"):
     try:
-        statements = sqlglot.parse(sql, read="duckdb")
+        statements = sqlglot.parse(sql, read=dialect)
     except sqlglot.errors.ParseError:
         return False, "The SQL could not be understood."
 
@@ -19,15 +19,15 @@ def validate_sql(sql):
     tables = list(query.find_all(exp.Table))
 
     if not tables:
-        return False, "The query must use uploaded_data."
+        return False, f"The query must use {table_name}."
 
     for table in tables:
         if (
-            table.name != "uploaded_data"
+            table.name != table_name
             or table.db
             or table.catalog
         ):
-            return False, "Only the uploaded_data table is allowed."
+            return False, f"Use only the unqualified table name {table_name}."
 
     for function in query.find_all(exp.Func):
         if not isinstance(function, exp.Count):
@@ -54,4 +54,4 @@ def validate_sql(sql):
         if type(node) not in allowed_nodes:
             return False, "This SQL structure is not supported yet."
 
-    return True, "Initial checks passed."
+    return True, "Initial SQL checks passed."
