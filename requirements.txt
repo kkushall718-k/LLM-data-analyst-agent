@@ -27,6 +27,7 @@ referencing==0.37.0
 requests==2.34.2
 rpds-py==2026.6.3
 six==1.17.0
+sqlglot==30.18.0
 starlette==1.6.0
 streamlit==1.64.0
 toml==0.10.2

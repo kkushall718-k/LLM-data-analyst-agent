@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
-import streamlit as st
-import pandas as pd
 import duckdb
+from sql_safety import validate_sql
 
 st.title("LLM Data Analyst Agent")
 st.write("Welcome! This app will help you explore your data.")
@@ -11,6 +10,12 @@ uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
 
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
+    st.write("Column names and data types:")
+    schema = pd.DataFrame({
+        "column": df.columns,
+        "data_type": df.dtypes.astype(str).values
+    })
+    st.dataframe(schema)
     connection = duckdb.connect()
     connection.register("uploaded_data", df)
 
@@ -20,6 +25,14 @@ if uploaded_file is not None:
         GROUP BY country
         ORDER BY total_rows DESC
     """
+
+    is_valid, message = validate_sql(sql)
+
+    if not is_valid:
+        connection.close()
+        st.error(message)
+        st.stop()
+
     result = connection.execute(sql).df()
 
     connection.close()
