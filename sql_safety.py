@@ -11,10 +11,15 @@ def validate_sql(sql):
     if len(statements) != 1:
         return False, "Only one SQL statement is allowed."
 
-    if not isinstance(statements[0], exp.Select):
+    query = statements[0]
+
+    if not isinstance(query, exp.Select):
         return False, "Only SELECT queries are allowed."
 
-    tables = list(statements[0].find_all(exp.Table))
+    tables = list(query.find_all(exp.Table))
+
+    if not tables:
+        return False, "The query must use uploaded_data."
 
     for table in tables:
         if (
@@ -24,8 +29,29 @@ def validate_sql(sql):
         ):
             return False, "Only the uploaded_data table is allowed."
 
-    for function in statements[0].find_all(exp.Func):
+    for function in query.find_all(exp.Func):
         if not isinstance(function, exp.Count):
             return False, "Only the COUNT function is currently allowed."
+
+    allowed_nodes = {
+        exp.Select,
+        exp.From,
+        exp.Table,
+        exp.Identifier,
+        exp.Column,
+        exp.Star,
+        exp.Count,
+        exp.Alias,
+        exp.Group,
+        exp.Order,
+        exp.Ordered,
+        exp.Limit,
+        exp.Literal,
+        exp.Distinct,
+    }
+
+    for node in query.walk():
+        if type(node) not in allowed_nodes:
+            return False, "This SQL structure is not supported yet."
 
     return True, "Initial checks passed."
