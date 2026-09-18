@@ -3,6 +3,7 @@ import pandas as pd
 import duckdb
 from openai import OpenAI
 from sql_safety import validate_sql
+from pdf_report import create_pdf
 
 
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
@@ -168,6 +169,22 @@ if uploaded_file is not None:
 
                 st.write("Explanation:")
                 st.write(explanation.output_text)
+
+                pdf_data = create_pdf(
+                    question,
+                    generated_sql,
+                    explanation.output_text,
+                    ai_result,
+                )
+
+                st.download_button(
+                    label="Download PDF report",
+                    data=pdf_data,
+                    file_name="analysis_report.pdf",
+                    mime="application/pdf",
+                    key="download_pdf_report",
+                    on_click="ignore",
+                )
 
                 st.dataframe(ai_result)
 
