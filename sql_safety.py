@@ -29,9 +29,11 @@ def validate_sql(sql, table_name="uploaded_data", dialect="duckdb"):
         ):
             return False, f"Use only the unqualified table name {table_name}."
 
+        allowed_functions = (exp.Count, exp.Sum, exp.Avg, exp.Min, exp.Max)
+
     for function in query.find_all(exp.Func):
-        if not isinstance(function, exp.Count):
-            return False, "Only the COUNT function is currently allowed."
+        if not isinstance(function, allowed_functions):
+            return False, "Only COUNT, SUM, AVG, MIN and MAX are allowed."
 
     allowed_nodes = {
         exp.Select,
@@ -48,6 +50,10 @@ def validate_sql(sql, table_name="uploaded_data", dialect="duckdb"):
         exp.Limit,
         exp.Literal,
         exp.Distinct,
+        exp.Sum,
+        exp.Avg,
+        exp.Min,
+        exp.Max,
     }
 
     for node in query.walk():
